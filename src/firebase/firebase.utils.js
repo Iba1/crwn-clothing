@@ -14,14 +14,50 @@ const config = {
 
   };
 
-  firebase.initializeApp(config);
+export const createUserProfileDocument = async (userAuth, additionalData) => {
+
+  if(!userAuth) return;
+
+  const userRef = firestore.doc(`users/${userAuth.uid}`);
+
+  const snapShot = await userRef.get(); //this reads the document but does not create it
+
+  if(!snapShot.exists) { //when we read the document we created and if a ref does not exits, then we create one
+
+    const { displayName, email } = userAuth;
+    const creadtedAt = new Date();
+
+    try {
+      
+      await 
+        userRef.set({
+          displayName,
+          email,
+          creadtedAt,
+          ...additionalData
+      })
+
+    } catch (error) {
+
+      console.log('error creating user', error.message);
+
+    }
+  }
+
+  return userRef;
+};
+
+firebase.initializeApp(config);
 
 export const auth = firebase.auth();
 export const firestore = firebase.firestore();
 
 const provider = new firebase.auth.GoogleAuthProvider();
+//const provider2 = new firebase.auth.EmailAuthProvider();
+
 provider.setCustomParameters({ prompt: 'select_account'});
 
 export const signInWithGoogle = () => auth.signInWithPopup(provider);
+//export const signInWithEmail = () => auth.signInWithPopup(provider2);
 
 export default firebase;
